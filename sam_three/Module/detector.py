@@ -1,12 +1,12 @@
-import os
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from typing import Optional, List
 
-from sam3.visualization_utils import prepare_masks_for_visualization
 from sam3.model_builder import build_sam3_video_predictor
+from sam3.visualization_utils import prepare_masks_for_visualization
 
+from sam_three.Method.io import loadImageFileNames
 from sam_three.Method.utils import propagate_in_video
 
 class Detector(object):
@@ -31,7 +31,7 @@ class Detector(object):
 
     def detectImages(
         self,
-        image_list: List[Image],
+        image_list: List[Image.Image],
     ) -> np.ndarray:
         response = self.predictor.handle_request(
             request=dict(
@@ -89,17 +89,7 @@ class Detector(object):
         self,
         image_folder_path: str,
     ) -> np.ndarray:
-        image_filename_list = os.listdir(image_folder_path)
-
-        valid_image_filename_list = []
-
-        for image_filename in image_filename_list:
-            if image_filename.split('.')[-1] not in ['png', 'jpg', 'jpeg']:
-                continue
-
-            valid_image_filename_list.append(image_filename)
-
-        valid_image_filename_list.sort()
+        valid_image_filename_list = loadImageFileNames(image_folder_path)
 
         valid_image_file_path_list = [
             image_folder_path + image_filename for image_filename in valid_image_filename_list
