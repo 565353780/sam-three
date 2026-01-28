@@ -9,12 +9,19 @@ def toMaskImage(mask: np.ndarray) -> np.ndarray:
     return mask_image
 
 
-def toMaskedImage(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
-    # 将mask扩展为3通道（RGB）
-    mask_3channel = mask[:, :, np.newaxis] if len(mask.shape) == 2 else mask
+def toMaskedImage(
+    image: np.ndarray,
+    mask: np.ndarray,
+    background_color: list = [255, 255, 255],
+) -> np.ndarray:
+    # 保证mask为2维，image为3通道
+    if len(mask.shape) == 2:
+        mask_3channel = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
+    else:
+        mask_3channel = mask
 
-    # 使用mask抠图：将mask为False的区域设为0（黑色背景）
-    masked_image = image * mask_3channel
+    # 新建一个背景色填充的图像
+    bg = np.full_like(image, background_color, dtype=image.dtype)
+    # 用mask决定保留原图像素还是背景色
+    masked_image = np.where(mask_3channel, image, bg)
     return masked_image
-
-

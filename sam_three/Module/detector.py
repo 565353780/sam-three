@@ -13,18 +13,20 @@ class Detector(object):
     def __init__(
         self,
         model_file_path: Optional[str]=None,
+        gpu_list: List[int]=[0],
     ) -> None:
         if model_file_path is not None:
-            self.loadModel(model_file_path)
+            self.loadModel(model_file_path, gpu_list)
         return
 
     def loadModel(
         self,
         model_file_path: str,
+        gpu_list: List[int]=[0],
     ) -> bool:
         self.predictor = build_sam3_video_predictor(
             checkpoint_path=model_file_path,
-            gpus_to_use=[0],
+            gpus_to_use=gpu_list,
             max_num_objects=1,
         )
         return True

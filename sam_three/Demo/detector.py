@@ -13,9 +13,9 @@ def demo():
     image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/images/"
     mask_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masks/"
     masked_image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masked_images/"
+    gpu_list = [0]
 
-
-    detector = Detector(model_file_path)
+    detector = Detector(model_file_path, gpu_list)
 
     valid_image_filename_list = loadImageFileNames(image_folder_path)
 
@@ -37,7 +37,7 @@ def demo():
         image = cv2.imread(valid_image_file_path_list[i])
         mask = masks[i]
 
-        masked_image = toMaskedImage(image, mask)
+        masked_image = toMaskedImage(image, mask, background_color=[255, 255, 255])
 
         cv2.imwrite(masked_image_folder_path + valid_image_filename_list[i], masked_image)
     return True
