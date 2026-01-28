@@ -15,6 +15,7 @@ mask_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masks/"
 predictor = build_sam3_video_predictor(
     checkpoint_path=model_file_path,
     gpus_to_use=[0],
+    max_num_objects=1,
 )
 
 image_filename_list = os.listdir(image_folder_path)
@@ -60,6 +61,22 @@ response = predictor.handle_request(
     )
 )
 session_id = response["session_id"]
+
+response = predictor.handle_request(
+    request=dict(
+        type="add_prompt",
+        session_id=session_id,
+        frame_index=0,
+        text="object",
+    )
+)
+out = response["outputs"]
+
+# now we propagate the outputs from frame 0 to the end of the video and collect all outputs
+outputs_per_frame = propagate_in_video(predictor, session_id)
+
+# finally, we reformat the outputs for visualization and plot the outputs every 60 frames
+outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
 
 IMG_WIDTH, IMG_HEIGHT = image_list[0].size
 

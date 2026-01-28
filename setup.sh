@@ -6,7 +6,9 @@ pip install ninja
 pip3 install torch torchvision torchaudio \
   --index-url https://download.pytorch.org/whl/cu124
 
-pip install decord pycocotools tqdm
+pip install opencv-python einops psutil matplotlib \
+  pandas scikit-image scikit-learn decord pycocotools \
+  tqdm
 
 cd cc_torch
 python setup.py install
