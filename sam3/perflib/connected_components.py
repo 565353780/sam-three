@@ -1,8 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
 
 # pyre-unsafe
-import logging
-
 import torch
 
 try:
@@ -10,7 +8,7 @@ try:
 
     HAS_CC_TORCH = True
 except ImportError:
-    logging.debug(
+    print(
         "cc_torch not found. Consider installing for better performance. Command line:"
         " pip install git+https://github.com/ronghanghu/cc_torch.git"
     )
@@ -71,6 +69,9 @@ def connected_components(input_tensor: torch.Tensor):
         "Input tensor must be (B, H, W) or (B, 1, H, W)."
     )
 
+    return connected_components_cpu(input_tensor)
+
+    #FIXME: will create runtime error!
     if input_tensor.is_cuda:
         if HAS_CC_TORCH:
             return get_connected_components(input_tensor.to(torch.uint8))
