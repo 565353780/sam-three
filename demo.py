@@ -1,21 +1,17 @@
 import os
 import cv2
-from PIL import Image
 from tqdm import trange
 
-from sam3.visualization_utils import prepare_masks_for_visualization
-from sam3.model_builder import build_sam3_video_predictor
+from sam_three.Module.detector import Detector
 
 home = os.environ['HOME']
 model_file_path = home + '/chLi/Model/SAM3/sam3/sam3.pt'
 image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/images/"
 mask_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masks/"
+masked_image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masked_images/"
 
-predictor = build_sam3_video_predictor(
-    checkpoint_path=model_file_path,
-    gpus_to_use=[0],
-    max_num_objects=1,
-)
+
+detector = Detector(model_file_path)
 
 image_filename_list = os.listdir(image_folder_path)
 
@@ -29,53 +25,23 @@ for image_filename in image_filename_list:
 
 valid_image_filename_list.sort()
 
-#valid_image_filename_list = valid_image_filename_list[:4]
+valid_image_file_path_list = [
+    image_folder_path + image_filename for image_filename in valid_image_filename_list
+]
+valid_mask_file_path_list = [
+    mask_folder_path + image_filename for image_filename in valid_image_filename_list
+]
 
-print('start load images...')
-image_list = []
-for i in trange(len(valid_image_filename_list)):
-    valid_image_file_path = image_folder_path + valid_image_filename_list[i]
+masks = detector.detectImageFiles(valid_image_file_path_list)
 
-    image = Image.open(valid_image_file_path)
-    image_list.append(image)
-
-
-def propagate_in_video(predictor, session_id):
-    # we will just propagate from frame 0 to the end of the video
-    outputs_per_frame = {}
-    for response in predictor.handle_stream_request(
-        request=dict(
-            type="propagate_in_video",
-            session_id=session_id,
-        )
-    ):
-        outputs_per_frame[response["frame_index"]] = response["outputs"]
-
-    return outputs_per_frame
-
-response = predictor.handle_request(
-    request=dict(
-        type="start_session",
-        resource_path=image_list,
-    )
-)
-session_id = response["session_id"]
-
-response = predictor.handle_request(
-    request=dict(
-        type="add_prompt",
-        session_id=session_id,
-        frame_index=0,
-        text="object",
-    )
-)
-out = response["outputs"]
-
-# now we propagate the outputs from frame 0 to the end of the video and collect all outputs
-outputs_per_frame = propagate_in_video(predictor, session_id)
-
-# finally, we reformat the outputs for visualization and plot the outputs every 60 frames
-outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
+os.makedirs(mask_folder_path, exist_ok=True)
+print('start save mask...')
+for i in trange(len(valid_image_file_path_list)):
+    mask = masks[i]
+    # 将bool类型的mask转为0/255的uint8, 再转换为RGB二值图
+    mask_uint8 = (mask.astype("uint8") * 255)
+    mask_rgb = cv2.cvtColor(mask_uint8, cv2.COLOR_GRAY2RGB)
+    cv2.imwrite(mask_folder_path + valid_image_filename_list[i], mask_rgb)
 
 '''
 IMG_WIDTH, IMG_HEIGHT = image_list[0].size
@@ -110,25 +76,3 @@ outputs_per_frame = propagate_in_video(predictor, session_id)
 # finally, we reformat the outputs for visualization and plot the outputs every 60 frames
 outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
 '''
-
-os.makedirs(mask_folder_path, exist_ok=True)
-print('start save mask...')
-for i in trange(len(valid_image_filename_list)):
-    mask = outputs_per_frame[i][0]
-    # 将bool类型的mask转为0/255的uint8, 再转换为RGB二值图
-    mask_uint8 = (mask.astype("uint8") * 255)
-    mask_rgb = cv2.cvtColor(mask_uint8, cv2.COLOR_GRAY2RGB)
-    cv2.imwrite(mask_folder_path + valid_image_filename_list[i], mask_rgb)
-
-# finally, close the inference session to free its GPU resources
-# (you may start a new session on another video)
-_ = predictor.handle_request(
-    request=dict(
-        type="close_session",
-        session_id=session_id,
-    )
-)
-
-# after all inference is done, we can shutdown the predictor
-# to free up the multi-GPU process group
-predictor.shutdown()
