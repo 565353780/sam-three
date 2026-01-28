@@ -14,7 +14,7 @@ try:
 
     GENERIC_NMS_AVAILABLE = True
 except ImportError:
-    logging.debug(
+    print(
         "Falling back to triton or CPU mask NMS implementation -- please install `torch_generic_nms` via\n\t"
         'pip uninstall -y torch_generic_nms; TORCH_CUDA_ARCH_LIST="8.0 9.0" pip install git+https://github.com/ronghanghu/torch_generic_nms'
     )
@@ -60,6 +60,9 @@ def generic_nms(
 
     assert ious.dim() == 2 and ious.size(0) == ious.size(1)
     assert scores.dim() == 1 and scores.size(0) == ious.size(0)
+
+    #FIXME: use cpu for stable running
+    return generic_nms_cpu(ious, scores, iou_threshold)
 
     if ious.is_cuda:
         if GENERIC_NMS_AVAILABLE:

@@ -69,9 +69,9 @@ def connected_components(input_tensor: torch.Tensor):
         "Input tensor must be (B, H, W) or (B, 1, H, W)."
     )
 
+    #FIXME: use cpu for stable running
     return connected_components_cpu(input_tensor)
 
-    #FIXME: will create runtime error!
     if input_tensor.is_cuda:
         if HAS_CC_TORCH:
             return get_connected_components(input_tensor.to(torch.uint8))
