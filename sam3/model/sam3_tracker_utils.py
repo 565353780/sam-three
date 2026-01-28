@@ -382,6 +382,10 @@ def fill_holes_in_mask_scores(mask, max_area, fill_holes=True, remove_sprinkles=
 
     if max_area <= 0:
         return mask  # nothing to fill in this case
+    
+    # Handle empty batch case - if batch size is 0, return mask as-is
+    if mask.shape[0] == 0:
+        return mask
 
     if fill_holes:
         # We remove small connected components in background by changing them to foreground

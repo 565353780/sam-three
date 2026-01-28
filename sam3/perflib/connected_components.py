@@ -31,7 +31,8 @@ def connected_components_cpu_single(values: torch.Tensor):
 
 def connected_components_cpu(input_tensor: torch.Tensor):
     out_shape = input_tensor.shape
-    if input_tensor.dim() == 4 and input_tensor.shape[1] == 1:
+    was_4d = input_tensor.dim() == 4 and input_tensor.shape[1] == 1
+    if was_4d:
         input_tensor = input_tensor.squeeze(1)
     else:
         assert input_tensor.dim() == 3, (
@@ -39,6 +40,35 @@ def connected_components_cpu(input_tensor: torch.Tensor):
         )
 
     batch_size = input_tensor.shape[0]
+    
+    # Handle empty batch case
+    if batch_size == 0:
+        # Return empty tensors with the same shape structure
+        # Even when batch=0, PyTorch preserves H and W in the shape
+        if was_4d:
+            # Original was (B, 1, H, W), return (0, 1, H, W)
+            if len(out_shape) >= 4:
+                H, W = out_shape[2], out_shape[3]
+            elif len(input_tensor.shape) >= 3:
+                H, W = input_tensor.shape[1], input_tensor.shape[2]
+            else:
+                # Fallback: use default size if shape info is unavailable
+                H, W = 1, 1
+            labels_tensor = torch.zeros(0, 1, H, W, dtype=torch.int32, device=input_tensor.device)
+            counts_tensor = torch.zeros(0, 1, H, W, dtype=torch.int32, device=input_tensor.device)
+        else:
+            # Original was (B, H, W), return (0, H, W)
+            if len(input_tensor.shape) >= 3:
+                H, W = input_tensor.shape[1], input_tensor.shape[2]
+            elif len(out_shape) >= 3:
+                H, W = out_shape[1], out_shape[2]
+            else:
+                # Fallback: use default size if shape info is unavailable
+                H, W = 1, 1
+            labels_tensor = torch.zeros(0, H, W, dtype=torch.int32, device=input_tensor.device)
+            counts_tensor = torch.zeros(0, H, W, dtype=torch.int32, device=input_tensor.device)
+        return labels_tensor, counts_tensor
+    
     labels_list = []
     counts_list = []
     for b in range(batch_size):

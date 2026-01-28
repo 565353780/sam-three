@@ -1,6 +1,5 @@
 import os
 import cv2
-import torch
 from PIL import Image
 from tqdm import trange
 
@@ -30,7 +29,7 @@ for image_filename in image_filename_list:
 
 valid_image_filename_list.sort()
 
-valid_image_filename_list = valid_image_filename_list[:4]
+#valid_image_filename_list = valid_image_filename_list[:4]
 
 print('start load images...')
 image_list = []
@@ -78,6 +77,7 @@ outputs_per_frame = propagate_in_video(predictor, session_id)
 # finally, we reformat the outputs for visualization and plot the outputs every 60 frames
 outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
 
+'''
 IMG_WIDTH, IMG_HEIGHT = image_list[0].size
 
 points_tensor = torch.tensor(
@@ -96,7 +96,7 @@ response = predictor.handle_request(
     request=dict(
         type="add_prompt",
         session_id=session_id,
-        frame_index=0,
+        frame_index=1,
         points=points_tensor,
         point_labels=points_labels_tensor,
         obj_id=0,
@@ -109,12 +109,16 @@ outputs_per_frame = propagate_in_video(predictor, session_id)
 
 # finally, we reformat the outputs for visualization and plot the outputs every 60 frames
 outputs_per_frame = prepare_masks_for_visualization(outputs_per_frame)
+'''
 
 os.makedirs(mask_folder_path, exist_ok=True)
 print('start save mask...')
 for i in trange(len(valid_image_filename_list)):
     mask = outputs_per_frame[i][0]
-    cv2.imwrite(mask_folder_path + valid_image_filename_list[i], mask)
+    # 将bool类型的mask转为0/255的uint8, 再转换为RGB二值图
+    mask_uint8 = (mask.astype("uint8") * 255)
+    mask_rgb = cv2.cvtColor(mask_uint8, cv2.COLOR_GRAY2RGB)
+    cv2.imwrite(mask_folder_path + valid_image_filename_list[i], mask_rgb)
 
 # finally, close the inference session to free its GPU resources
 # (you may start a new session on another video)
