@@ -4,7 +4,7 @@ from tqdm import trange
 
 from sam_three.Method.image import toMaskImage, toMaskedImage
 from sam_three.Method.io import loadImageFileNames
-from sam_three.Module.detector import Detector
+from sam_three.Module.video_detector import VideoDetector
 
 
 def demo():
@@ -15,7 +15,7 @@ def demo():
     masked_image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/masked_images/"
     gpu_list = [0]
 
-    detector = Detector(model_file_path, gpu_list)
+    video_detector = VideoDetector(model_file_path, gpu_list)
 
     valid_image_filename_list = loadImageFileNames(image_folder_path)
 
@@ -23,7 +23,7 @@ def demo():
         image_folder_path + image_filename for image_filename in valid_image_filename_list
     ]
 
-    masks = detector.detectImageFiles(valid_image_file_path_list)
+    masks = video_detector.detectImageFiles(valid_image_file_path_list)
 
     os.makedirs(mask_folder_path, exist_ok=True)
     print('start save mask...')

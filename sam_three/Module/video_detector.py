@@ -9,25 +9,27 @@ from sam3.visualization_utils import prepare_masks_for_visualization
 from sam_three.Method.io import loadImageFileNames
 from sam_three.Method.utils import propagate_in_video
 
-class Detector(object):
+class VideoDetector(object):
     def __init__(
         self,
         model_file_path: Optional[str]=None,
         gpu_list: List[int]=[0],
+        max_num_objects: int=-1,
     ) -> None:
         if model_file_path is not None:
-            self.loadModel(model_file_path, gpu_list)
+            self.loadModel(model_file_path, gpu_list, max_num_objects)
         return
 
     def loadModel(
         self,
         model_file_path: str,
         gpu_list: List[int]=[0],
+        max_num_objects: int=-1,
     ) -> bool:
         self.predictor = build_sam3_video_predictor(
             checkpoint_path=model_file_path,
             gpus_to_use=gpu_list,
-            max_num_objects=1,
+            max_num_objects=max_num_objects,
         )
         return True
 
