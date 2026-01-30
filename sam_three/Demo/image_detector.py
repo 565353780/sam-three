@@ -11,7 +11,10 @@ def demo():
     device = 'cuda:0'
 
     image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/images/"
-    prompt = 'object'
+    prompt = 'eye'
+
+    save_image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/sam3_image_mask/"
+    os.makedirs(save_image_folder_path, exist_ok=True)
 
     image_detector = ImageDetector(model_file_path, device)
 
@@ -28,6 +31,9 @@ def demo():
         masks = output["masks"]
         boxes = output["boxes"]
         scores = output["scores"]
+        image = output['image']
 
         print('found', len(masks), 'instances!')
+
+        image.save(save_image_folder_path + valid_image_filename)
     return True

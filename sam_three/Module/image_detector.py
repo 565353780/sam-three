@@ -1,10 +1,12 @@
 import os
 import numpy as np
 from PIL import Image
+from copy import deepcopy
 from typing import Optional, Union
 
 from sam3.model_builder import build_sam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
+from sam3.visualization_utils import plot_results
 
 
 class ImageDetector(object):
@@ -26,7 +28,7 @@ class ImageDetector(object):
             checkpoint_path=model_file_path,
             device=device,
         )
-        self.processor = Sam3Processor(model)
+        self.processor = Sam3Processor(model, confidence_threshold=0.5)
         return True
 
     def detectImage(
@@ -38,14 +40,23 @@ class ImageDetector(object):
         return:
             output["masks"], output["boxes"], output["scores"]
         '''
+        if isinstance(image, np.ndarray):
+            image = Image.fromarray(image)
+
         inference_state = self.processor.set_image(image)
-        # Prompt the model with text
-        output = self.processor.set_text_prompt(
+
+        self.processor.reset_all_prompts(inference_state)
+
+        inference_state = self.processor.set_text_prompt(
             state=inference_state,
             prompt=prompt,
         )
 
-        return output
+        vis_image = deepcopy(image)
+        plot_results(vis_image, inference_state)
+        inference_state['image'] = vis_image
+
+        return inference_state
 
     def detectImageFile(
         self,
