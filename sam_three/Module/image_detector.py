@@ -1,12 +1,13 @@
 import os
 import numpy as np
+import cv2
 from PIL import Image
 from copy import deepcopy
 from typing import Optional, Union
 
 from sam3.model_builder import build_sam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
-from sam3.visualization_utils import plot_results
+from sam3.visualization_utils import plot_results, draw_masks_to_frame, COLORS
 
 
 class ImageDetector(object):
@@ -28,7 +29,7 @@ class ImageDetector(object):
             checkpoint_path=model_file_path,
             device=device,
         )
-        self.processor = Sam3Processor(model, confidence_threshold=0.5)
+        self.processor = Sam3Processor(model, device=device, confidence_threshold=0.5)
         return True
 
     def detectImage(
@@ -54,7 +55,27 @@ class ImageDetector(object):
 
         vis_image = deepcopy(image)
         plot_results(vis_image, inference_state)
-        inference_state['image'] = vis_image
+
+        # 使用 draw_masks_to_frame 在图像上绘制 mask 并写入 inference_state
+        vis_frame = np.array(vis_image)[..., ::-1]
+        masks = inference_state.get("masks", [])
+        if len(masks) > 0:
+            masks_np = np.stack([
+                (m.squeeze(0).cpu().numpy() > 0).astype(np.uint8)
+                for m in masks
+            ])
+            # 若 mask 尺寸与图像不一致则缩放到图像尺寸
+            h, w = vis_frame.shape[:2]
+            if masks_np.shape[1] != h or masks_np.shape[2] != w:
+                masks_resized = np.stack([
+                    cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST)
+                    for m in masks_np
+                ])
+                masks_np = (masks_resized > 0).astype(np.uint8)
+            n = len(masks_np)
+            colors = (COLORS[:n] * 255).astype(np.uint8)
+            vis_frame = draw_masks_to_frame(vis_frame, masks_np, colors)
+        inference_state["image"] = vis_frame
 
         return inference_state
 

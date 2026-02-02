@@ -1,4 +1,5 @@
 import os
+import cv2
 from tqdm import tqdm
 
 from sam_three.Method.io import loadImageFileNames
@@ -35,5 +36,8 @@ def demo():
 
         print('found', len(masks), 'instances!')
 
-        image.save(save_image_folder_path + valid_image_filename)
+        if len(masks) == 0:
+            continue
+
+        cv2.imwrite(save_image_folder_path + valid_image_filename, image)
     return True
