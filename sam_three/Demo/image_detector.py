@@ -10,7 +10,7 @@ def demo():
     model_file_path = home + '/chLi/Model/SAM3/sam3/sam3.pt'
     device = 'cuda:0'
 
-    image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/gs/images/"
+    image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/colmap/gs/images/"
     prompt = 'eye'
 
     save_image_folder_path = home + "/chLi/Dataset/GS/haizei_1_v4/sam3_image_mask/"

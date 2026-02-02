@@ -1,8 +1,10 @@
-from sam_three.Demo.detector import demo as demo_detect
+from sam_three.Demo.image_detector import demo as demo_detect_image
+from sam_three.Demo.video_detector import demo as demo_detect_video
 
 
 if __name__ == '__main__':
-    demo_detect()
+    demo_detect_image()
+    demo_detect_video()
 
 '''
 IMG_WIDTH, IMG_HEIGHT = image_list[0].size
