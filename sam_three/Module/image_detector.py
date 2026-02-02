@@ -1,13 +1,13 @@
 import os
-import numpy as np
 import cv2
+import numpy as np
 from PIL import Image
 from copy import deepcopy
 from typing import Optional, Union
 
 from sam3.model_builder import build_sam3_image_model
 from sam3.model.sam3_image_processor import Sam3Processor
-from sam3.visualization_utils import plot_results, draw_masks_to_frame, COLORS
+from sam3.visualization_utils import draw_masks_to_frame, COLORS
 
 
 class ImageDetector(object):
@@ -54,7 +54,6 @@ class ImageDetector(object):
         )
 
         vis_image = deepcopy(image)
-        plot_results(vis_image, inference_state)
 
         # 使用 draw_masks_to_frame 在图像上绘制 mask 并写入 inference_state
         vis_frame = np.array(vis_image)[..., ::-1]
